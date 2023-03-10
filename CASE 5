@@ -1,0 +1,92 @@
+### Case Study #5 - Data Mart ###
+Link to the case study : https://8weeksqlchallenge.com/case-study-5/
+
+# 1. Data Cleansing Steps
+
+The 'cws' table will be used throughout the whole case. It will be referenced as 'with cws as (...)'.
+
+```
+with cws  as (
+	SELECT 
+    region, 
+    platform, 
+    customer_type,
+		week_date::date as week_date, 
+		extract(week from week_date::date) as week, 
+		extract(month from week_date::date) as month_number, 
+		extract(year from week_date::date) as calendar_year, 
+		segment, 
+		case 
+			when segment like '_1' then 'Young Adults' 
+			when segment like '_2' then 'Middle Aged'
+			when segment like '_3' or segment like '_4' then 'Retirees'
+			when segment is null then 'unknown' 
+			end as age_band, 
+		case 
+			when segment like 'F_' then 'Families' 
+			when segment like 'C_' then 'Couples' 
+			when segment is null then 'unknown' 
+			end as demographic, 
+		transactions, 
+		sales,
+		round(sales/transactions, 2) as avg_transaction
+	from weekly_sales)
+ 
+ select * from cws
+ 
+ ```
+ 
+## 2. Data Exploration
+
+ What day of the week is used for each week_date value?
+ 
+```
+ select distinct extract(dow from week_date) from cws
+```
+ 
+
+What is the total sales for the 4 weeks before and after 2020-06-15? What is the growth or reduction rate in actual values and percentage of sales?
+
+```
+WITH
+  cws  as (...),
+	p as (
+	  SELECT 
+      calendar_year,
+      sum(CASE WHEN week BETWEEN 21 AND 24 THEN sales else NULL end) as before, 
+      sum(CASE WHEN week BETWEEN 25 AND 28 THEN sales else NULL end) as after
+	  from cws
+	  group by calendar_year)
+	
+SELECT before, after, (1 - before::numeric/after::numeric) * 100 from p
+```
+
+
+## What about the entire 12 weeks before and after?
+
+```
+WITH
+  cws  as (...),
+	p as (
+	  SELECT 
+      calendar_year,
+      sum(CASE WHEN week BETWEEN 12 AND 24 THEN sales else NULL end) as before, 
+      sum(CASE WHEN week BETWEEN 25 AND 37 THEN sales else NULL end) as after
+	  from cws
+	  group by calendar_year)
+	
+SELECT before, after, (1 - before::numeric/after::numeric) * 100 from p
+```
+  
+
+# How do the sale metrics for these 2 periods before and after compare with the previous years in 2018 and 2019?
+
+```
+with cws  as (...), p as (...)
+
+SELECT calendar_yearn, before, after, (1 - before::numeric/after::numeric) * 100 from p
+where  calendar_year between '2018' and '2020'
+group by calendar_year
+
+select calendar_year, before, round(((after::numeric - before::numeric)/before::numeric)*100, 2), after from g
+```
