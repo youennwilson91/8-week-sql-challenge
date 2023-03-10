@@ -10,9 +10,9 @@ The 'cws' temporary table will be used throughout the whole case.
 ```
 CREATE TEMP TEABLE cws  as (
 	SELECT 
-    region, 
-    platform, 
-    customer_type,
+                region, 
+                platform, 
+                customer_type,
 		week_date::date as week_date, 
 		extract(week from week_date::date) as week, 
 		extract(month from week_date::date) as month_number, 
